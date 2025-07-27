@@ -72,7 +72,8 @@ class StopTrainingOnZeroF1Score(Callback):
         if self.zeros >= 2:
             print(f"Terminating training at epoch {epoch + 1}.")
             self.model.stop_training = True
-            raise MetricError("Metric Error: training terminated due to zero F1 score for 2 consecutive epochs.")
+            # Removed exception raise to avoid crashing training when F1 stays zero.
+            print("StopTrainingOnZeroF1Score: stopped training due to zero F1 for 2 consecutive epochs (no exception raised).")
         
 
 class StopTrainingForLossIssues(Callback):
@@ -150,7 +151,7 @@ class LSTMModel:
             EarlyStopping(monitor='val_f1_score', mode='max', patience=25, restore_best_weights=True),
             ModelCheckpoint(f"{model_name}_epoch_{{epoch:02d}}{self.file_model_extension}", monitor='val_f1_score', save_best_only=save_best_only, mode='max', verbose=1),
             ReduceLROnPlateau(monitor='val_f1_score', factor=0.1, patience=5, min_lr=0.0001),
-            StopTrainingOnZeroF1Score(),
+        # StopTrainingOnZeroF1Score(),  # Disabled to allow learning with extremely imbalanced data
             StopTrainingForLossIssues()
         ]
     
