@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import numpy as np
+import random
 import tensorflow as tf
 from tensorflow.keras.metrics import Precision, Recall
 from tensorflow.keras import losses
@@ -26,6 +27,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--step", type=int, default=1)
     p.add_argument("--batch", type=int, default=128)
     p.add_argument("--epochs", type=int, default=100)
+    p.add_argument("--seed", type=int, default=42)  # global seed
     p.add_argument("--focal", action="store_true", help="Use BinaryFocalCrossentropy loss")
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--exp_dir", type=str, default="experiments/default")
@@ -35,6 +37,13 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+
+    # ------------------
+    # Reproducibility
+    random.seed(args.seed)
+    np.random.seed(args.seed)
+    tf.random.set_seed(args.seed)
+    # ------------------
     exp_dir = Path(args.exp_dir)
     exp_dir.mkdir(parents=True, exist_ok=True)
 
@@ -89,7 +98,32 @@ def main() -> None:
     from codes.ModelEvaluator import ModelEvaluator
     evaluator = ModelEvaluator(test_probs, y_test, threshold=-1, minPrecision=0.7)
     evaluator.execute()
-    evaluator.report = None  # placeholder
+
+    # Save metrics and figures
+    metrics = evaluator.metrics
+    with open(exp_dir / "metrics.json", "w") as f:
+        import json
+        json.dump(metrics, f, indent=2)
+
+    import matplotlib.pyplot as plt
+    params_fig = {
+        'outputDir': str(exp_dir),
+        'DatasetType': 'test',
+        'WindowSize': args.window,
+        'stepSize': args.step
+    }
+    evaluator.plotCurve(evaluator.ROCCurve['falsePositiveRates'], evaluator.ROCCurve['truePositiveRates'], evaluator.ROCCurve['AUROC'], 'FPR', 'TPR', 'ROC Curve', saveFigure=True, params=params_fig)
+    evaluator.plotCurve(evaluator.PRCurve['recalls'], evaluator.PRCurve['precisions'], evaluator.PRCurve['AUPRC'], 'Recall', 'Precision', 'PR Curve', saveFigure=True, params=params_fig)
+
+    # Confusion matrix
+    from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+    preds_thr = (test_probs >= evaluator.estimatedThreshold).astype(int)
+    cm = confusion_matrix(y_test, preds_thr)
+    disp = ConfusionMatrixDisplay(cm)
+    disp.plot()
+    plt.title("Confusion Matrix")
+    plt.savefig(exp_dir / "confusion_matrix.png")
+    plt.close()
     from sklearn.metrics import precision_recall_fscore_support, confusion_matrix, roc_auc_score
 
     y_pred = (test_probs.ravel() > 0.5).astype(int)
