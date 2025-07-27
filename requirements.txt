@@ -1,0 +1,12 @@
+# Core libraries
+numpy
+pandas
+scikit-learn
+matplotlib
+seaborn
+
+# Deep learning
+tensorflow
+
+# Optional utilities
+setuptools

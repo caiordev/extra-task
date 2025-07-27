@@ -1,0 +1,15 @@
+# python
+__pycache__/
+*.pyc
+
+# ambientes
+venv/
+.env
+
+# dados brutos
+dataset/
+experiments/
+
+# Jupyter/IDE
+.ipynb_checkpoints/
+.vscode/
