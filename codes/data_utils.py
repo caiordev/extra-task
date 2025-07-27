@@ -95,13 +95,18 @@ def train_val_test_split(
     """Stratified split of X/y into train/val/test sets."""
     from sklearn.model_selection import train_test_split
 
+    # fall back to non-stratified split if any class has <2 samples
+    counts = np.bincount(y)
+    strat_flag = y if (len(counts) == 2 and counts.min() >= 2) else None
+
     X_train, X_temp, y_train, y_temp = train_test_split(
-        X, y, test_size=1 - train_frac, stratify=y, random_state=random_state
+        X, y, test_size=1 - train_frac, stratify=strat_flag, random_state=random_state
     )
     val_size_adjusted = val_frac / (1 - train_frac)
+    strat_flag2 = y_temp if (np.bincount(y_temp).min() >= 2) else None
     X_val, X_test, y_val, y_test = train_test_split(
-        X_temp, y_temp, test_size=1 - val_size_adjusted, stratify=y_temp, random_state=random_state
-    )
+         X_temp, y_temp, test_size=1 - val_size_adjusted, stratify=strat_flag2, random_state=random_state
+     )
     return X_train, y_train, X_val, y_val, X_test, y_test
 
 __all__ = [
