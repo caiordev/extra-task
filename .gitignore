@@ -6,10 +6,6 @@ __pycache__/
 venv/
 .env
 
-# dados brutos
-dataset/
-experiments/
-
 # Jupyter/IDE
 .ipynb_checkpoints/
 .vscode/
