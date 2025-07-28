@@ -122,6 +122,9 @@ class ModelEvaluator:
             # Check for NaN in probabilities or labels before proceeding
             if numpy.any(numpy.isnan(probabilities)) or numpy.any(numpy.isnan(labels)):
                 raise ValueError("ModelEvaluator > CalculateMetrics: Input contains NaN values, which are not allowed.")
+            # Flatten arrays to 1-D to avoid shape issues with sklearn metrics
+            probabilities = probabilities.ravel()
+            labels = labels.ravel()
             predictions = (probabilities >= threshold).astype(int)
 
             # Normalize target_class to match keys returned by classification_report

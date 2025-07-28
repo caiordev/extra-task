@@ -117,7 +117,7 @@ def main() -> None:
 
     # Confusion matrix
     from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-    preds_thr = (test_probs >= evaluator.estimatedThreshold).astype(int)
+    preds_thr = (test_probs.ravel() >= evaluator.estimatedThreshold).astype(int)
     cm = confusion_matrix(y_test, preds_thr)
     disp = ConfusionMatrixDisplay(cm)
     disp.plot()
@@ -126,7 +126,8 @@ def main() -> None:
     plt.close()
     from sklearn.metrics import precision_recall_fscore_support, confusion_matrix, roc_auc_score
 
-    y_pred = (test_probs.ravel() > 0.5).astype(int)
+    # Use the same threshold chosen by evaluator for final metrics
+    y_pred = (test_probs.ravel() >= evaluator.estimatedThreshold).astype(int)
     precision, recall_, f1, _ = precision_recall_fscore_support(y_test, y_pred, average="binary")
     auc_val = roc_auc_score(y_test, test_probs)
     print(f"Test Precision: {precision:.4f} | Recall: {recall_:.4f} | F1: {f1:.4f} | AUROC: {auc_val:.4f}")

@@ -34,7 +34,8 @@ class F1Score(tf.keras.metrics.Metric):
         self.recall = tf.keras.metrics.Recall()
 
     def update_state(self, y_true, y_pred, sample_weight=None):
-        y_pred = tf.round(y_pred)
+        # Use a lower threshold to account for extreme class imbalance
+        y_pred = tf.cast(y_pred > 0.1, tf.float32)
         self.precision.update_state(y_true, y_pred, sample_weight)
         self.recall.update_state(y_true, y_pred, sample_weight)
 
