@@ -105,7 +105,7 @@ class ModelEvaluator:
         return bestThreshold
 
 
-    def calculateMetrics(self, probabilities, labels, threshold, target_class='True' ):
+    def calculateMetrics(self, probabilities, labels, threshold, target_class='1' ):
         '''
         Calculate the evaluation metrics
 
@@ -124,6 +124,12 @@ class ModelEvaluator:
                 raise ValueError("ModelEvaluator > CalculateMetrics: Input contains NaN values, which are not allowed.")
             predictions = (probabilities >= threshold).astype(int)
 
+            # Normalize target_class to match keys returned by classification_report
+            if isinstance(target_class, (bool, numpy.bool_)):
+                target_class = str(int(target_class))  # True -> '1', False -> '0'
+            else:
+                target_class = str(target_class)
+
             report = classification_report(labels, predictions, output_dict=True, zero_division=0)
 
             falsePositiveRates, truePositiveRates, _ = roc_curve(labels, probabilities)
@@ -137,9 +143,9 @@ class ModelEvaluator:
             self.thresholds = thresholds
 
             metrics = {
-                PRECISION: report[target_class][PRECISION.lower()],
-                RECALL: report[target_class][RECALL.lower()],
-                F1_SCORE: report[target_class][F1_SCORE.lower()],
+                PRECISION: report.get(target_class, {}).get(PRECISION.lower(), 0.0),
+                RECALL: report.get(target_class, {}).get(RECALL.lower(), 0.0),
+                F1_SCORE: report.get(target_class, {}).get(F1_SCORE.lower(), 0.0),
                 THRESHOLD: threshold
             }
             ROCCurve = {
@@ -166,7 +172,7 @@ class ModelEvaluator:
             raise
 
     
-    def execute(self, targetClass='True', threshold=-1):
+    def execute(self, targetClass='1', threshold=-1):
         '''
         Execute the evaluation
 
