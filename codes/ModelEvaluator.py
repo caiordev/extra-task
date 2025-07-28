@@ -142,11 +142,12 @@ class ModelEvaluator:
             self.recalls = recalls
             self.thresholds = thresholds
 
+            # Ensure values are native Python floats for JSON serialization
             metrics = {
-                PRECISION: report.get(target_class, {}).get(PRECISION.lower(), 0.0),
-                RECALL: report.get(target_class, {}).get(RECALL.lower(), 0.0),
-                F1_SCORE: report.get(target_class, {}).get(F1_SCORE.lower(), 0.0),
-                THRESHOLD: threshold
+                PRECISION: float(report.get(target_class, {}).get(PRECISION.lower(), 0.0)),
+                RECALL: float(report.get(target_class, {}).get(RECALL.lower(), 0.0)),
+                F1_SCORE: float(report.get(target_class, {}).get(F1_SCORE.lower(), 0.0)),
+                THRESHOLD: float(threshold)
             }
             ROCCurve = {
                 'falsePositiveRates': falsePositiveRates,
