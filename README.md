@@ -1,55 +1,29 @@
-# Fault Detection with Shared-LSTM (Option B)
+# Reconhecimentos e Direitos Autorais
 
-Implementation of the extra-task for **Fundamentos de Redes Neurais** – UFMA.
-The objective is to detect failures in multi-sensor vibration data.
+## Metadados
+- **Autor:** [Caio Reis Batista]
+- **Contato:** [caio.reis@discente.ufma.br]
+- **Data última versão:** [13/06/2025]
+- **Versão:** 1.0
+- **Outros repositórios:** []
 
-## Project structure
+## Agradecimentos
+Universidade Federal do Maranhão (UFMA), Professor Doutor Thales Levi Azevedo Valente, e colegas de curso.
 
-```
-├── codes/              # Core Python modules
-│   ├── data_utils.py   # Loading + window generation
-│   ├── LSTM.py         # Model definition / training helpers
-│   ├── train_lstm.py   # End-to-end training script
-│   └── ...
-├── dataset/            # CSV parts provided by professor
-├── experiments/        # Outputs (models, plots, metrics)
-├── requirements.txt    # Pip dependencies
-└── environment.yml     # Conda equivalent
-```
+## Copyright/License
 
-## Quick start (pip)
+Este material é resultado de um trabalho acadêmico para a disciplina EECP0053 - TÓPICOS EM ENGENHARIA DA COMPUTAÇÃO II - FUNDAMENTOS DE REDES NEURAIS, sob a orientação do professor Dr. THALES LEVI AZEVEDO VALENTE, semestre letivo 2025.1, curso Engenharia da Computação, na Universidade Federal do Maranhão (UFMA).
 
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+Todo o material sob esta licença é software livre: pode ser usado para fins acadêmicos e comerciais sem nenhum custo. Não há papelada, nem royalties, nem restrições de "copyleft" do tipo GNU. Ele é licenciado sob os termos da Licença MIT, conforme descrito abaixo, e, portanto, é compatível com a GPL e também se qualifica como software de código aberto. É de domínio público.
 
-python -m codes.train_lstm \
-    --dataset_dir dataset \
-    --window 240 --step 1 \
-    --batch 128 --epochs 100 \
-    --exp_dir experiments/exp01
-```
+Os detalhes legais estão abaixo. O espírito desta licença é que você é livre para usar este material para qualquer finalidade, sem nenhum custo. O único requisito é que, se você usá-los, nos dê crédito.
 
-### Optional flags
-* `--focal` – use `BinaryFocalCrossentropy` loss (better for class-imbalance).
-* `--debug` – verbose logs.
+### Licença MIT
 
-## Conda environment
-If you prefer conda / mamba:
+Permissão é concedida, gratuitamente, a qualquer pessoa que obtenha uma cópia deste software e dos arquivos de documentação associados (o "Software"), para lidar no Software sem restrição, incluindo sem limitação os direitos de usar, copiar, modificar, mesclar, publicar, distribuir, sublicenciar e/ou vender cópias do Software, e permitir pessoas a quem o Software é fornecido a fazê-lo, sujeito às seguintes condições:
 
-```bash
-mamba env create -f environment.yml
-conda activate fault-lstm
-```
+Este aviso de direitos autorais e este aviso de permissão devem ser incluídos em todas as cópias ou partes substanciais do Software.
 
-## Notebook
-Open `notebooks/eda_train_report.ipynb` (to be generated) for:
-1. Exploratory Data Analysis (EDA)
-2. Window creation rationale
-3. Model training with early stopping & LR scheduler
-4. Confusion matrix, ROC & PR curves using `ModelEvaluator`
-5. Discussion of limitations & future work
+O SOFTWARE É FORNECIDO "COMO ESTÁ", SEM GARANTIA DE QUALQUER TIPO, EXPRESSA OU IMPLÍCITA, INCLUINDO MAS NÃO SE LIMITANDO ÀS GARANTIAS DE COMERCIALIZAÇÃO, ADEQUAÇÃO A UM DETERMINADO FIM E NÃO INFRINGÊNCIA. EM NENHUM CASO OS AUTORES OU DETENTORES DE DIREITOS AUTORAIS SERÃO RESPONSÁVEIS POR QUALQUER RECLAMAÇÃO, DANOS OU OUTRA RESPONSABILIDADE, SEJA EM AÇÃO DE CONTRATO, TORT OU OUTRA FORMA, DECORRENTE DE, FORA DE OU EM CONEXÃO COM O SOFTWARE OU O USO OU OUTRAS NEGOCIAÇÕES NO SOFTWARE.
 
----
-© 2025 Thales Valente – Teaching purposes
+Para mais informações sobre a Licença MIT: https://opensource.org/licenses/MIT

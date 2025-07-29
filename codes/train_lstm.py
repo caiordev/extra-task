@@ -69,6 +69,19 @@ def main() -> None:
     print("Class weights:", class_weights)
 
     print("Building LSTM model …")
+
+    # Build tf.data pipelines (shuffle only on training)
+    train_ds = (
+        tf.data.Dataset.from_tensor_slices((X_train_e, y_train))
+        .shuffle(buffer_size=10000)
+        .batch(args.batch)
+        .prefetch(tf.data.AUTOTUNE)
+    )
+    val_ds = (
+        tf.data.Dataset.from_tensor_slices((X_val_e, y_val))
+        .batch(args.batch)
+        .prefetch(tf.data.AUTOTUNE)
+    )
     loss_fn = losses.BinaryFocalCrossentropy() if args.focal else None
 
     model = LSTMModel(
@@ -81,12 +94,11 @@ def main() -> None:
 
     callbacks = model.setup_callbacks(model_name=str(exp_dir / "chkpt"))
     history = model.model.fit(
-        X_train_e,
-        y_train,
-        validation_data=(X_val_e, y_val),
+        train_ds,
+
+        validation_data=val_ds,
         epochs=args.epochs,
-        batch_size=args.batch,
-        shuffle=True,
+
         class_weight=class_weights,
         callbacks=callbacks,
         verbose=1,
