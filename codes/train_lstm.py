@@ -62,11 +62,13 @@ def main() -> None:
     X_val_e = np.expand_dims(X_val, -1)
     X_test_e = np.expand_dims(X_test, -1)
 
-    # Compute class weights
+    # Compute class weights with stronger emphasis on minority class
     from sklearn.utils.class_weight import compute_class_weight
     class_weight_vals = compute_class_weight(class_weight="balanced", classes=np.unique(y_train), y=y_train)
-    class_weights = {0: class_weight_vals[0], 1: class_weight_vals[1]}
+    # Amplify minority class weight for extreme imbalance
+    class_weights = {0: class_weight_vals[0], 1: class_weight_vals[1] * 2.0}
     print("Class weights:", class_weights)
+    print(f"Positive class amplification: {class_weight_vals[1] * 2.0:.2f}")
 
     print("Building LSTM model …")
 
@@ -82,11 +84,20 @@ def main() -> None:
         .batch(args.batch)
         .prefetch(tf.data.AUTOTUNE)
     )
-    loss_fn = losses.BinaryFocalCrossentropy() if args.focal else None
+    # Use focal loss by default for extreme imbalance, or binary crossentropy with class weights
+    loss_fn = losses.BinaryFocalCrossentropy(gamma=2.0, alpha=0.25) if args.focal else 'binary_crossentropy'
 
+    # Add AUC metrics which are more suitable for imbalanced data
+    from tensorflow.keras.metrics import AUC
     model = LSTMModel(
         window_size=args.window,
-        metrics=[Precision(name="precision"), Recall(name="recall"), F1Score()],
+        metrics=[
+            Precision(name="precision"), 
+            Recall(name="recall"), 
+            F1Score(),
+            AUC(name='auc_roc'),
+            AUC(name='auc_pr', curve='PR')
+        ],
         class_weights=class_weights,
         learning_rate=args.lr,
         debug=args.debug,

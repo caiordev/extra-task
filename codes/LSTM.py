@@ -34,8 +34,8 @@ class F1Score(tf.keras.metrics.Metric):
         self.recall = tf.keras.metrics.Recall()
 
     def update_state(self, y_true, y_pred, sample_weight=None):
-        # Use a lower threshold to account for extreme class imbalance
-        y_pred = tf.cast(y_pred > 0.1, tf.float32)
+        # Use a much lower threshold for extreme class imbalance (0.003% positive class)
+        y_pred = tf.cast(y_pred > 0.01, tf.float32)
         self.precision.update_state(y_true, y_pred, sample_weight)
         self.recall.update_state(y_true, y_pred, sample_weight)
 
@@ -148,11 +148,14 @@ class LSTMModel:
         if self.debug:
             print("Setting up callbacks...")
         return [
-            EarlyStopping(monitor='loss', mode='min', patience=20, restore_best_weights=False),
-            EarlyStopping(monitor='val_f1_score', mode='max', patience=25, restore_best_weights=True),
-            ModelCheckpoint(f"{model_name}_epoch_{{epoch:02d}}{self.file_model_extension}", monitor='val_f1_score', save_best_only=save_best_only, mode='max', verbose=1),
-            ReduceLROnPlateau(monitor='val_f1_score', factor=0.1, patience=5, min_lr=0.0001),
-        # StopTrainingOnZeroF1Score(),  # Disabled to allow learning with extremely imbalanced data
+            # Monitor loss with higher patience for extremely imbalanced data
+            EarlyStopping(monitor='val_loss', mode='min', patience=30, restore_best_weights=False),
+            # Monitor AUC-PR which is more suitable for imbalanced data
+            EarlyStopping(monitor='val_auc_pr', mode='max', patience=35, restore_best_weights=True),
+            ModelCheckpoint(f"{model_name}_epoch_{{epoch:02d}}{self.file_model_extension}", monitor='val_auc_pr', save_best_only=save_best_only, mode='max', verbose=1),
+            # More aggressive learning rate reduction for better convergence
+            ReduceLROnPlateau(monitor='val_auc_pr', factor=0.5, patience=8, min_lr=1e-6, verbose=1),
+            # Keep loss monitoring for stability
             StopTrainingForLossIssues()
         ]
     
@@ -221,12 +224,16 @@ class LSTMModel:
             print("Build model...")
         model = tf.keras.Sequential([
             tf.keras.layers.InputLayer(input_shape=(self.window_size, 1)),
-            tf.keras.layers.LSTM(64, return_sequences=True, kernel_initializer=HeNormal()),
+            tf.keras.layers.LSTM(128, return_sequences=True, kernel_initializer=HeNormal(), dropout=0.2, recurrent_dropout=0.2),
             tf.keras.layers.BatchNormalization(),
-            tf.keras.layers.LSTM(64, kernel_initializer=HeNormal(), kernel_regularizer=l2(0.01)),
+            tf.keras.layers.LSTM(64, kernel_initializer=HeNormal(), kernel_regularizer=l2(0.001), dropout=0.3),
             tf.keras.layers.BatchNormalization(),
-            tf.keras.layers.Dense(64, activation='relu', kernel_initializer=HeNormal(), kernel_regularizer=l2(0.01)),
+            tf.keras.layers.Dropout(0.4),
+            tf.keras.layers.Dense(128, activation='relu', kernel_initializer=HeNormal(), kernel_regularizer=l2(0.001)),
             tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Dropout(0.3),
+            tf.keras.layers.Dense(32, activation='relu', kernel_initializer=HeNormal()),
+            tf.keras.layers.Dropout(0.2),
             tf.keras.layers.Dense(1, activation='sigmoid')
         ])
         if optimizer is None:
