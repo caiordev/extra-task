@@ -52,6 +52,9 @@ class F1Score(tf.keras.metrics.Metric):
     def reset_state(self):
         self.precision.reset_state()
         self.recall.reset_state()
+    
+    def get_config(self):
+        return {'name': self.name}
 
 class StopTrainingOnZeroF1Score(Callback):
     def __init__(self):
